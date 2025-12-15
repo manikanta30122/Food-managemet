@@ -466,8 +466,52 @@ export default function App() {
     (e.target as HTMLFormElement).reset();
     showToast('Public feedback posted!');
   };
+const handleExportCSV = () => {
+  if (!data.leftoverDetails.length) {
+    showToast('No data available to export');
+    return;
+  }
 
-  const handleExportCSV = () => { showToast('Report downloaded'); };
+  const headers = [
+    'Meal',
+    'Cooked Plates',
+    'Served Plates',
+    'Leftover Plates',
+    'Cost Per Plate',
+    'Total Loss',
+    'Date & Time'
+  ];
+
+  const rows = data.leftoverDetails.map(item => [
+    item.meal,
+    item.cooked,
+    item.served,
+    Math.max(0, item.cooked - item.served),
+    item.cost,
+    Math.max(0, item.cooked - item.served) * item.cost,
+    new Date(item.timestamp).toLocaleString()
+  ]);
+
+  const csvContent =
+    headers.join(',') + '\n' +
+    rows.map(row => row.join(',')).join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `hostel_food_waste_${new Date().toISOString().split('T')[0]}.csv`;
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+  showToast('Excel file downloaded');
+};
+
+   
 
   const handleResetData = () => {
     if(window.confirm('Are you sure? This will delete all local data.')) {
